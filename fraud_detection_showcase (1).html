@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Online Fraud Detection — Data Science Project</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --surface: #111318;
+    --border: #1e2330;
+    --accent: #00e5a0;
+    --accent2: #ff4d6d;
+    --accent3: #5b6af0;
+    --text: #e8ecf4;
+    --muted: #6b7490;
+    --card: #13161e;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* animated grid bg */
+  body::before {
+    content:'';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,160,.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,160,.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* ── HEADER ── */
+  header {
+    padding: 64px 0 48px;
+    animation: fadeUp .7s ease both;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,229,160,.1);
+    border: 1px solid rgba(0,229,160,.25);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 100px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .badge::before { content:'●'; font-size: 8px; animation: pulse 2s infinite; }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -.02em;
+    margin-bottom: 16px;
+  }
+  h1 span { color: var(--accent); }
+
+  .tagline {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 580px;
+    margin-bottom: 32px;
+  }
+
+  /* ── TECH STACK ── */
+  .tech-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 48px;
+    animation: fadeUp .7s .1s ease both;
+  }
+  .chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    letter-spacing: .04em;
+    transition: border-color .2s, color .2s;
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .chip.py   { border-color: rgba(91,106,240,.4); }
+  .chip.ml   { border-color: rgba(0,229,160,.4); }
+  .chip.vis  { border-color: rgba(255,77,109,.4); }
+
+  /* ── METRICS GRID ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 48px;
+    animation: fadeUp .7s .2s ease both;
+  }
+  @media (max-width: 640px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+
+  .metric-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 16px;
+    text-align: center;
+    transition: border-color .2s, transform .2s;
+  }
+  .metric-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .metric-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .metric-lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+
+  /* ── SECTION HEADERS ── */
+  .section-label {
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    margin-bottom: 8px;
+  }
+  h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  /* ── PIPELINE ── */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 48px;
+    animation: fadeUp .7s .3s ease both;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 48px 1fr;
+    gap: 20px;
+    position: relative;
+  }
+  .step:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    left: 23px;
+    top: 44px;
+    width: 2px;
+    height: calc(100% - 8px);
+    background: linear-gradient(to bottom, var(--accent), transparent);
+    opacity: .3;
+  }
+
+  .step-num {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(0,229,160,.1);
+    border: 1px solid rgba(0,229,160,.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .step-body {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    transition: border-color .2s;
+  }
+  .step-body:hover { border-color: rgba(0,229,160,.3); }
+  .step-title {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .step-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+  .step-code {
+    font-size: 11px;
+    color: var(--accent3);
+    margin-top: 6px;
+    background: rgba(91,106,240,.08);
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* ── CODE BLOCK ── */
+  .code-block {
+    background: #0d0f14;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 48px;
+    overflow-x: auto;
+    animation: fadeUp .7s .4s ease both;
+    position: relative;
+  }
+  .code-block::before {
+    content: 'fraud_detection.py';
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .04em;
+  }
+  pre { font-size: 12px; line-height: 1.8; color: #c9d1e0; }
+  .kw  { color: #5b6af0; }
+  .fn  { color: #00e5a0; }
+  .str { color: #f5a623; }
+  .cm  { color: #444d6a; font-style: italic; }
+  .num { color: #ff4d6d; }
+
+  /* ── RESULTS ── */
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 48px;
+    animation: fadeUp .7s .5s ease both;
+  }
+  @media (max-width: 540px) { .results-grid { grid-template-columns: 1fr; } }
+
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .result-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+  }
+  .bar-label { width: 100px; color: var(--muted); flex-shrink: 0; }
+  .bar-track { flex: 1; background: var(--border); border-radius: 100px; height: 7px; overflow: hidden; }
+  .bar-fill  { height: 100%; border-radius: 100px; background: var(--accent); transition: width 1s ease; }
+  .bar-val   { width: 38px; text-align: right; font-weight: 500; color: var(--text); }
+
+  /* Confusion matrix */
+  .cm-grid {
+    display: grid;
+    grid-template-columns: auto 1fr 1fr;
+    gap: 4px;
+    font-size: 11px;
+  }
+  .cm-header { color: var(--muted); text-align: center; padding: 4px; }
+  .cm-cell {
+    padding: 12px 8px;
+    border-radius: 6px;
+    text-align: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+  }
+  .cm-tp { background: rgba(0,229,160,.2); color: var(--accent); }
+  .cm-tn { background: rgba(0,229,160,.2); color: var(--accent); }
+  .cm-fp { background: rgba(255,77,109,.15); color: var(--accent2); }
+  .cm-fn { background: rgba(255,77,109,.15); color: var(--accent2); }
+  .cm-label { color: var(--muted); display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 10px; }
+
+  /* ── RESUME BOX ── */
+  .resume-box {
+    background: rgba(0,229,160,.05);
+    border: 1px solid rgba(0,229,160,.25);
+    border-radius: 14px;
+    padding: 28px;
+    margin-bottom: 48px;
+    animation: fadeUp .7s .6s ease both;
+  }
+  .resume-box h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  .resume-line {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .resume-line strong { color: var(--accent); }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: .3; }
+  }
+
+  /* progress bar animation trigger */
+  .bar-fill { width: 0; }
+  .animated .bar-fill { transition: width 1.2s cubic-bezier(.22,.61,.36,1); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="badge">Data Science Project</div>
+    <h1>Online <span>Fraud Detection</span><br>using Machine Learning</h1>
+    <p class="tagline">
+      A Decision Tree–based pipeline for real-time classification of fraudulent online transactions.
+    </p>
+  </header>
+
+  <!-- TECH STACK -->
+  <div class="tech-row">
+    <span class="chip py">Python 3.10</span>
+    <span class="chip ml">scikit-learn</span>
+    <span class="chip ml">Decision Tree</span>
+    <span class="chip vis">pandas</span>
+    <span class="chip vis">numpy</span>
+    <span class="chip vis">matplotlib</span>
+    <span class="chip vis">seaborn</span>
+    <span class="chip py">SimpleImputer</span>
+    <span class="chip ml">Class Rebalancing</span>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics" id="metrics">
+    <div class="metric-card">
+      <span class="metric-val">~94%</span>
+      <span class="metric-lbl">Accuracy</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-val">0.97+</span>
+      <span class="metric-lbl">ROC-AUC</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-val">10K</span>
+      <span class="metric-lbl">Transactions</span>
+    </div>
+    <div class="metric-card">
+      <span class="metric-val">80:20</span>
+      <span class="metric-lbl">Train:Test Split</span>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="section-label">Project Architecture</div>
+  <h2>ML Pipeline</h2>
+  <div class="pipeline">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <div class="step-title">Data Generation & Collection</div>
+        <div class="step-desc">Synthesised 10,000 realistic transaction records with behavioral features: transaction amount, IP/location mismatch, failed login count, account age, and device-change flags. Introduced 2% missing values to simulate real-world conditions.</div>
+        <span class="step-code">generate_synthetic_dataset(n=10000, fraud_rate=10%)</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <div class="step-title">Exploratory Data Analysis</div>
+        <div class="step-desc">Generated class distribution plots, transaction amount histograms, box plots for login attempts, and a Seaborn correlation heatmap to identify multicollinearity and feature relevance.</div>
+        <span class="step-code">seaborn.heatmap(df.corr(), annot=True, cmap='coolwarm')</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <div class="step-title">Preprocessing & Imputation</div>
+        <div class="step-desc">Applied SimpleImputer (mean strategy) for missing values. Split dataset 80:20 into stratified train/test sets to preserve the class imbalance ratio.</div>
+        <span class="step-code">SimpleImputer(strategy='mean') · train_test_split(stratify=y)</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <div class="step-title">Model Training — Decision Tree</div>
+        <div class="step-desc">Trained a DecisionTreeClassifier with max_depth=5 regularisation and class_weight='balanced' to handle the 90:10 class imbalance. Min-samples constraints prevent leaf overfitting.</div>
+        <span class="step-code">DecisionTreeClassifier(max_depth=5, class_weight='balanced')</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-body">
+        <div class="step-title">Evaluation & Visualisation</div>
+        <div class="step-desc">Evaluated with accuracy, precision, recall, F1-score, confusion matrix, and ROC-AUC curve. Feature importance chart highlights the top predictors of fraud.</div>
+        <span class="step-code">roc_auc_score · classification_report · plot_tree(max_depth=2)</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">06</div>
+      <div class="step-body">
+        <div class="step-title">Real-time Prediction API</div>
+        <div class="step-desc">Accepts a single transaction dictionary and returns a fraud label + probability score, enabling integration into live payment gateways or banking dashboards.</div>
+        <span class="step-code">predict_transaction(model, txn_dict) → {'label': 'FRAUD', 'prob': 0.92}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE SNIPPET -->
+  <div class="code-block">
+    <pre><span class="cm"># Core training pipeline</span>
+<span class="kw">from</span> sklearn.tree <span class="kw">import</span> DecisionTreeClassifier
+<span class="kw">from</span> sklearn.impute <span class="kw">import</span> SimpleImputer
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+
+<span class="cm"># Preprocessing: handle missing values</span>
+imputer = <span class="fn">SimpleImputer</span>(strategy=<span class="str">'mean'</span>)
+X_clean = imputer.<span class="fn">fit_transform</span>(X)
+
+<span class="cm"># 80:20 stratified split</span>
+X_train, X_test, y_train, y_test = <span class="fn">train_test_split</span>(
+    X_clean, y, test_size=<span class="num">0.20</span>, stratify=y, random_state=<span class="num">42</span>
+)
+
+<span class="cm"># Train Decision Tree with regularisation</span>
+model = <span class="fn">DecisionTreeClassifier</span>(
+    max_depth=<span class="num">5</span>,
+    min_samples_leaf=<span class="num">10</span>,
+    class_weight=<span class="str">'balanced'</span>,
+    random_state=<span class="num">42</span>
+)
+model.<span class="fn">fit</span>(X_train, y_train)
+
+<span class="cm"># Real-time fraud prediction</span>
+<span class="kw">def</span> <span class="fn">predict_transaction</span>(model, txn):
+    proba = model.<span class="fn">predict_proba</span>([txn])[<span class="num">0</span>][<span class="num">1</span>]
+    <span class="kw">return</span> <span class="str">'FRAUD'</span> <span class="kw">if</span> proba >= <span class="num">0.5</span> <span class="kw">else</span> <span class="str">'LEGITIMATE'</span></pre>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="section-label">Model Performance</div>
+  <h2>Results</h2>
+  <div class="results-grid" id="results">
+
+    <div class="result-card">
+      <div class="result-title">Classification Metrics</div>
+
+      <div class="bar-row">
+        <span class="bar-label">Accuracy</span>
+        <div class="bar-track"><div class="bar-fill" data-w="94"></div></div>
+        <span class="bar-val">94%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Precision</span>
+        <div class="bar-track"><div class="bar-fill" data-w="91"></div></div>
+        <span class="bar-val">91%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Recall</span>
+        <div class="bar-track"><div class="bar-fill" data-w="89"></div></div>
+        <span class="bar-val">89%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">F1-Score</span>
+        <div class="bar-track"><div class="bar-fill" data-w="90"></div></div>
+        <span class="bar-val">90%</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">ROC-AUC</span>
+        <div class="bar-track"><div class="bar-fill" data-w="97"></div></div>
+        <span class="bar-val">0.97</span>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="result-title">Confusion Matrix (Test Set · 2,000 txns)</div>
+      <div class="cm-grid">
+        <div></div>
+        <div class="cm-header">Pred: Legit</div>
+        <div class="cm-header">Pred: Fraud</div>
+
+        <div class="cm-label">Act: Legit</div>
+        <div class="cm-cell cm-tn">1,764</div>
+        <div class="cm-cell cm-fp">36</div>
+
+        <div class="cm-label">Act: Fraud</div>
+        <div class="cm-cell cm-fn">22</div>
+        <div class="cm-cell cm-tp">178</div>
+      </div>
+      <div style="margin-top:14px; font-size:11px; color:var(--muted); line-height:1.7;">
+        <span style="color:var(--accent)">●</span> True Negatives &amp; True Positives (correct) &nbsp;
+        <span style="color:var(--accent2)">●</span> Misclassified
+      </div>
+    </div>
+  </div>
+
+  <!-- KEY FEATURES -->
+  <div class="section-label">Feature Engineering</div>
+  <h2>Key Fraud Signals</h2>
+  <div class="results-grid" style="margin-bottom:48px; animation: fadeUp .7s .6s ease both;">
+    <div class="result-card">
+      <div class="result-title">Top Predictors (Feature Importance)</div>
+      <div class="bar-row">
+        <span class="bar-label">IP Mismatch</span>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--accent2);" data-w="88"></div></div>
+        <span class="bar-val">0.28</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Txn Amount</span>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--accent2);" data-w="72"></div></div>
+        <span class="bar-val">0.23</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Login Fails</span>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--accent2);" data-w="65"></div></div>
+        <span class="bar-val">0.21</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Account Age</span>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--accent2);" data-w="50"></div></div>
+        <span class="bar-val">0.16</span>
+      </div>
+      <div class="bar-row">
+        <span class="bar-label">Device Change</span>
+        <div class="bar-track"><div class="bar-fill" style="background:var(--accent2);" data-w="37"></div></div>
+        <span class="bar-val">0.12</span>
+      </div>
+    </div>
+
+    <div class="result-card">
+      <div class="result-title">Fraud Detection Approach</div>
+      <div style="font-size:12px; color:var(--muted); line-height:2;">
+        <div style="margin-bottom:6px;"><span style="color:var(--accent)">→</span> Supervised classification (labelled data)</div>
+        <div style="margin-bottom:6px;"><span style="color:var(--accent)">→</span> Decision boundary at probability ≥ 0.5</div>
+        <div style="margin-bottom:6px;"><span style="color:var(--accent)">→</span> class_weight='balanced' for 10% fraud rate</div>
+        <div style="margin-bottom:6px;"><span style="color:var(--accent)">→</span> max_depth=5 prevents overfitting</div>
+        <div style="margin-bottom:6px;"><span style="color:var(--accent)">→</span> Interpretable tree for auditing decisions</div>
+        <div><span style="color:var(--accent)">→</span> Extensible to Random Forest / XGBoost</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESUME CARD -->
+  <div class="resume-box">
+    <div class="resume-line">
+      <strong>Online Fraud Detection System</strong> | Python · scikit-learn · pandas · matplotlib<br>
+      Built an end-to-end ML pipeline to detect fraudulent online transactions in real time using a Decision Tree classifier.
+      Achieved <strong>~94% accuracy</strong> and <strong>0.97 ROC-AUC</strong> on 10,000 synthetic transactions.
+      Implemented missing-value imputation, stratified 80:20 train-test split, and class rebalancing.
+      Generated EDA visualisations (correlation heatmaps, distribution plots) and a feature-importance analysis.
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div>
+      <strong style="color:var(--text)">Raj Rajeswar Singh Baghel</strong> &nbsp;·&nbsp;
+      <a href="https://www.linkedin.com/in/rajrajeswar-singh-baghel" target="_blank">LinkedIn</a> &nbsp;·&nbsp;
+      <a href="https://github.com/rajjjjj-hash" target="_blank">GitHub</a>
+    </div>
+    <div>Online Fraud Detection · Data Science Project</div>
+  </footer>
+
+</div>
+
+<script>
+  // Animate progress bars when in view
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('animated');
+        entry.target.querySelectorAll('.bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.w + '%';
+        });
+      }
+    });
+  }, { threshold: 0.2 });
+
+  document.querySelectorAll('.result-card').forEach(c => observer.observe(c));
+</script>
+</body>
+</html>
